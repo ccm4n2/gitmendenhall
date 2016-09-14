@@ -6,6 +6,7 @@ int main()
 {
 	double circumference;
 	int radius;
+	int i;
 	
 	printf("please enter the radius of a circle to calculate the circumference\n");
 	scanf("%d", &radius);
