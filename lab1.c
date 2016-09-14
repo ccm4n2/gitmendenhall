@@ -12,5 +12,6 @@ int main()
 	scanf("%d", &radius);
 	circumference = PI*2*radius;
 	printf("circumference of circle = %lf", circumference);
+	printf("this is a test comment\n");
 	return 0;
 };
