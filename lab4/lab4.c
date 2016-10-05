@@ -1,5 +1,7 @@
 #include<stdio.h>
+#include<stdlib.h>
 #include<math.h>
+#include<string.h>
 
 //function declarations
 void scale(double a, double b[],int length, FILE *fp_out);
@@ -10,7 +12,7 @@ double maximum_doubles(double a, double b);
 void centered(double a[], int length, FILE *fp_out);
 void normalized(double a[], int length, FILE *fp_out);
 
-int main()
+int main(int argc, char *argv[])
 {
 	//intial variables
 	int file;
@@ -20,14 +22,103 @@ int main()
 	double avg;
 	double max;
 	int length;
+	char* new_name;
 	double value;
-	double scalar;
-	double offset;
-	char c;
+	double scalar = 0;
+	double offset = 0;
+	int i;
+	int help =0;
+	int stats =0;
+	int center =0;
+	int rename;
+	char command;
+	int normal;
 	
-	//getting specified file from user
-	printf("Which file would you like to open? (1-11)\n");
-	scanf("%d", &file);
+	i=1;
+	while (i < argc){
+		//reading commands
+		if(strcmp(argv[i], "-n") == 0){
+			command = 'a';
+		}
+		else if(strcmp(argv[i], "-o") == 0){
+			command = 'b';
+		}
+		else if(strcmp(argv[i], "-s") == 0){
+			command = 'c';
+		}
+		else if(strcmp(argv[i], "-S") == 0){
+			command = 'd';
+		}
+		else if(strcmp(argv[i], "-C") == 0){
+			command = 'e';
+		}
+		else if(strcmp(argv[i], "-N") == 0){
+			command = 'f';
+		}
+		else if(strcmp(argv[i], "-r") == 0){
+			command = 'g';
+		}
+		else if(strcmp(argv[i], "-h") == 0){
+			command = 'h';
+		}
+		else{
+			command = 'j';
+		}
+		
+		//performs right operations based on command
+		switch(command){
+			case 'a':
+				i++;
+				//printf("This is a test1\n");
+				file = atoi(argv[i]);
+				//printf("%d\n", file);
+				i++;
+				break;
+			case 'b':
+				i++;
+				offset = atof(argv[i]);
+				i++;
+				break;
+			case 'c':
+				i++;
+				scalar = atof(argv[i]);
+				i++;
+				break;
+			case 'd':
+				stats = 1;
+				i++;
+				break;
+			case 'e':
+				center = 1;
+				i++;
+				break;
+			case 'f':
+				normal = 1;
+				i++;
+				break;
+			case 'g':
+				i++;
+				rename =1;
+				new_name = argv[i];
+				i++;
+				break;
+			case 'h':
+				help = 1;
+				i++;
+				break;
+			default:
+				i++;
+				break;
+		}
+	}
+	
+	//help print and tells user to restart program
+	if(help == 1){
+		printf("Program should be called as follows: ./myprogram -n 5 -S -r newfile\n");
+		return 0;
+	}
+	
+	//opening correct file
 	if(file < 10){
 		sprintf(str, "Raw_Data_0%d.txt", file);
 	}
@@ -40,17 +131,13 @@ int main()
 	
 	//read data into array
 	double data[length];
-	int i;
 	for(i=0;i<length; i++){
 		fscanf(fp, "%lf", &value);
 		data[i] = value;
 	}
 	
-	printf("Offset or Scalar? (o or s)\n");
-	scanf(" %c", &c);
-	
-	switch(c){
-	case 's':
+	//scaling file if supposed to
+	if(scalar != 0){
 		//create scalar output file
 		if(file < 10){
 			sprintf(str, "Scaled_Data_0%d.txt", file);
@@ -59,14 +146,13 @@ int main()
 		fp_out = fopen(str, "w");
 		
 		//scale the file
-		printf("Enter scalar: \n");
-		scanf("%lf", &scalar);
 		fprintf(fp_out, "%d %0.4lf\n", length, max*scalar);
 		scale(scalar, data, length, fp_out);
 		fclose(fp_out);
-		break;
+	}
 	
-	case 'o':
+	//offsetting file if suppossed to
+	if(offset!=0){
 		//create offset output file
 		if(file < 10){
 			sprintf(str, "Offset_Data_0%d.txt", file);
@@ -75,50 +161,63 @@ int main()
 		fp_out = fopen(str, "w");
 		
 		//offset the file and begin writing
-		printf("Enter offset: \n");
-		scanf("%lf", &offset);
 		fprintf(fp_out, "%d %0.4lf\n", length, max+offset);
 		offset_function(offset, data, length, fp_out);
 		fclose(fp_out);
-		break;
-	default:
-		printf("Not a Valid selection\n");
-		break;
 	}
 	
-	//create new output file
-	if(file < 10){
-		sprintf(str, "Statistics_Data_0%d.txt", file);
+	//stats of file if suppossed to
+	if(stats ==1){
+		//create new output file
+		if(file < 10){
+			sprintf(str, "Statistics_Data_0%d.txt", file);
+		}
+		else sprintf(str, "Statistics_Data_%d.txt", file);
+		fp_out = fopen(str, "w");
+		
+		//get average and max of data
+		avg = average(data, length);
+		max = maximum(data, length);
+		
+		//writing to stats file
+		fprintf(fp_out, "%.4lf $.4lf\n", avg, max);
 	}
-	else sprintf(str, "Statistics_Data_%d.txt", file);
-	fp_out = fopen(str, "w");
 	
-	//get average and max of data
-	avg = average(data, length);
-	max = maximum(data, length);
-	
-	//writing to stats file
-	fprintf(fp_out, "%.4lf $.4lf\n", avg, max);
-	
-	//creating out center file
-	if(file < 10){
-		sprintf(str, "Centered_Data_0%d.txt", file);
+	//centering a file if suppossed to
+	if(center ==1){
+		//creating out center file
+		if(file < 10){
+			sprintf(str, "Centered_Data_0%d.txt", file);
+		}
+		else sprintf(str, "Centered_Data_%d.txt", file);
+		fp_out = fopen(str, "w");
+		
+		//centering data
+		centered(data, length, fp_out);
 	}
-	else sprintf(str, "Centered_Data_%d.txt", file);
-	fp_out = fopen(str, "w");
 	
-	//centering data
-	centered(data, length, fp_out);
-	
-	//create normalized output file
-	if(file < 10){
+	//normalizing a file if supposed to
+	if(normal ==1){
+		if(file < 10){
 		sprintf(str, "Normalized_Data_0%d.txt", file);
-	}
-	else sprintf(str, "Normalized_Data_%d.txt", file);
-	fp_out = fopen(str, "w");
+		}
+		else sprintf(str, "Normalized_Data_%d.txt", file);
+		fp_out = fopen(str, "w");
 	
-	//normalizing data
-	normalized(data, length, fp_out);
+		//normalizing data
+		normalized(data, length, fp_out);
+	}
+	
+	//renaming a file if supposed to
+	if(rename ==1){
+		//creating new name file and writing data to it
+		sprintf(str, "%s.txt", new_name);
+		fp_out = fopen(str, "w");
+		fprintf(fp_out, "%d %d\n", length, (int)max);
+		for(i=0;i<length;i++){
+			fprintf(fp_out, "%.0lf\n", data[i]);
+		}
+	}
 	
 	fclose(fp_out);
 	fclose(fp);
