@@ -15,7 +15,7 @@ void normalized(double a[], int length, FILE *fp_out);
 int main(int argc, char *argv[])
 {
 	//intial variables
-	int file;
+	int file = 0;
 	FILE *fp;
 	FILE *fp_out;
 	char str[15];
@@ -31,8 +31,14 @@ int main(int argc, char *argv[])
 	int stats =0;
 	int center =0;
 	int rename;
-	char command;
+	char command = 'j';
 	int normal;
+	int count = 1;
+	
+	if(argc == 1){
+		printf("Error: not enough commands input\n");
+		return 0;
+	}
 	
 	i=1;
 	while (i < argc){
@@ -65,51 +71,71 @@ int main(int argc, char *argv[])
 			command = 'j';
 		}
 		
+		//for errors if end of argv
+		if(i==argc-1){
+			if(command == 'b'){
+				printf("Error not enough information need value for offset\n");
+				break;
+			}
+			if(command == 'c'){
+				printf("Error not enough information need value for scalar\n");
+				break;
+			}
+		}
+		i++;
+		
 		//performs right operations based on command
 		switch(command){
 			case 'a':
-				i++;
-				//printf("This is a test1\n");
 				file = atoi(argv[i]);
-				//printf("%d\n", file);
 				i++;
 				break;
 			case 'b':
-				i++;
 				offset = atof(argv[i]);
+				//offset error
+				if(offset == 0){
+					printf("Error not enough information need value for offset\n");
+					break;
+				}
 				i++;
 				break;
 			case 'c':
-				i++;
 				scalar = atof(argv[i]);
+				//scalar error
+				if(scalar == 0){
+					printf("Error not enough information need value for scalar\n");
+					break;
+				}
 				i++;
 				break;
 			case 'd':
 				stats = 1;
-				i++;
 				break;
 			case 'e':
 				center = 1;
-				i++;
 				break;
 			case 'f':
 				normal = 1;
-				i++;
 				break;
 			case 'g':
-				i++;
 				rename =1;
 				new_name = argv[i];
 				i++;
 				break;
 			case 'h':
 				help = 1;
-				i++;
 				break;
 			default:
-				i++;
+				printf("Option %d is a non-valid input\n", count);
 				break;
 		}
+		count ++;
+	}
+	
+	//if no file number error
+	if(file == 0){
+		printf("Error: no file specified use -n (1-11)\n");
+		return 0;
 	}
 	
 	//help print and tells user to restart program
@@ -180,7 +206,7 @@ int main(int argc, char *argv[])
 		max = maximum(data, length);
 		
 		//writing to stats file
-		fprintf(fp_out, "%.4lf $.4lf\n", avg, max);
+		fprintf(fp_out, "%.4lf %.4lf\n", avg, max);
 	}
 	
 	//centering a file if suppossed to
@@ -216,6 +242,68 @@ int main(int argc, char *argv[])
 		fprintf(fp_out, "%d %d\n", length, (int)max);
 		for(i=0;i<length;i++){
 			fprintf(fp_out, "%.0lf\n", data[i]);
+		}
+		
+		fclose(fp_out);
+		
+		//normal new file
+		if(normal ==1){
+		sprintf(str, "%s_Normalized.txt", new_name);
+		fp_out = fopen(str, "w");
+	
+		//normalizing data
+		normalized(data, length, fp_out);
+		fclose(fp_out);
+		}
+		
+		//center rename
+		if(center ==1){
+		//creating out center file
+		sprintf(str, "%s_Centered.txt", new_name);
+		fp_out = fopen(str, "w");
+		
+		//centering data
+		centered(data, length, fp_out);
+		fclose(fp_out);
+		}
+		
+		//scalar rename
+		if(scalar != 0){
+		//create scalar output file
+		sprintf(str, "%s_Scaled.txt", new_name);
+		fp_out = fopen(str, "w");
+		
+		//scale the file
+		fprintf(fp_out, "%d %0.4lf\n", length, max*scalar);
+		scale(scalar, data, length, fp_out);
+		fclose(fp_out);
+		}
+		
+		//offset rename
+		if(offset!=0){
+		//create offset output file
+		sprintf(str, "%s_Offset.txt", new_name);
+		fp_out = fopen(str, "w");
+		
+		//offset the file and begin writing
+		fprintf(fp_out, "%d %0.4lf\n", length, max+offset);
+		offset_function(offset, data, length, fp_out);
+		fclose(fp_out);
+		}
+		
+		//stats rename
+		if(stats ==1){
+		//create new output file
+		sprintf(str, "%s_Stats.txt", new_name);
+		fp_out = fopen(str, "w");
+		
+		//get average and max of data
+		avg = average(data, length);
+		max = maximum(data, length);
+		
+		//writing to stats file
+		fprintf(fp_out, "%.4lf %.4lf\n", avg, max);
+		fclose(fp_out);
 		}
 	}
 	
